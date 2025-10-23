@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "183202939157",
+    "project_id": "flutter-delivery-app-msucs",
+    "storage_bucket": "flutter-delivery-app-msucs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183202939157:android:444deef41c08c97989291c",
+        "android_client_info": {
+          "package_name": "com.example.delivery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeHLMGy21Vn0KEGYRe1nuKt_0a_Z30Xl0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
