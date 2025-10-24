@@ -27,14 +27,14 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
 
   Future<Map<String, String>> getSenderInfo(String senderId) async {
     try {
-      if (senderId.isEmpty) return {'name': '-', 'phone': '-'};
+      if (senderId.isEmpty) return {'name': '-', 'phone': '-'}; 
       final doc = await db.collection('Users').doc(senderId).get();
       if (doc.exists) {
         final data = doc.data()!;
-        return {'name': data['fullname'] ?? '-', 'phone': data['phone'] ?? '-'};
+        return {'name': data['fullname'] ?? '-', 'phone': data['phone'] ?? '-'}; 
       }
     } catch (e) {}
-    return {'name': '-', 'phone': '-'};
+    return {'name': '-', 'phone': '-'}; 
   }
 
   /// ✅ ฟังก์ชัน "ส่งของสำเร็จ"
@@ -58,14 +58,14 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
         "currentJobId": "",
       });
 
-      // 4️⃣ แสดง SnackBar
+      // 4️⃣ แสดง SnackBar แจ้งเตือน
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ ส่งของสำเร็จแล้ว!")),
       );
 
+      // 5️⃣ รอ 2 วินาทีแล้วกลับไปหน้า HomepageRider
       await Future.delayed(const Duration(seconds: 2));
 
-      // 5️⃣ กลับหน้า HomePageRider พร้อมพารามิเตอร์
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => HomepageRider(
@@ -76,10 +76,6 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
         ),
       );
 
-      // 6️⃣ ลบสินค้า
-      db.collection("Products").doc(widget.productId).delete().catchError((e) {
-        debugPrint("Error deleting product: $e");
-      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

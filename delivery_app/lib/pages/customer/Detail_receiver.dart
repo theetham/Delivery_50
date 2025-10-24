@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class Detail_receiver extends StatelessWidget {
   final Map<String, dynamic> productData;
   final String senderName;
 
-  const ProductDetailPage({
+  const Detail_receiver({
     super.key,
     required this.productData,
     required this.senderName,
@@ -36,7 +36,7 @@ class ProductDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("รายละเอียดสินค้า"),
+        title: const Text("รายละเอียดสินค้า (receiver)"),
         backgroundColor: const Color(0xFFFF8C42),
       ),
       body: SingleChildScrollView(
