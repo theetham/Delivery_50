@@ -27,14 +27,14 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
 
   Future<Map<String, String>> getSenderInfo(String senderId) async {
     try {
-      if (senderId.isEmpty) return {'name': '-', 'phone': '-'}; 
+      if (senderId.isEmpty) return {'name': '-', 'phone': '-'};
       final doc = await db.collection('Users').doc(senderId).get();
       if (doc.exists) {
         final data = doc.data()!;
-        return {'name': data['fullname'] ?? '-', 'phone': data['phone'] ?? '-'}; 
+        return {'name': data['fullname'] ?? '-', 'phone': data['phone'] ?? '-'};
       }
     } catch (e) {}
-    return {'name': '-', 'phone': '-'}; 
+    return {'name': '-', 'phone': '-'};
   }
 
   /// ✅ ฟังก์ชัน "ส่งของสำเร็จ"
@@ -42,28 +42,23 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
     if (!mounted) return;
 
     try {
-      // 1️⃣ อัปเดตสถานะสินค้า
       await db.collection("Products").doc(widget.productId).update({
         "status": "จัดส่งสำเร็จ ✅",
       });
 
-      // 2️⃣ ดึงข้อมูลไรเดอร์
       final riderDoc = await db.collection("Users").doc(widget.riderId).get();
       final phone = riderDoc['phone'] ?? '';
       final role = riderDoc['role'] ?? '';
       final userId = widget.riderId;
 
-      // 3️⃣ เคลียร์งานปัจจุบันของไรเดอร์
       await db.collection("Users").doc(widget.riderId).update({
         "currentJobId": "",
       });
 
-      // 4️⃣ แสดง SnackBar แจ้งเตือน
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ ส่งของสำเร็จแล้ว!")),
       );
 
-      // 5️⃣ รอ 2 วินาทีแล้วกลับไปหน้า HomepageRider
       await Future.delayed(const Duration(seconds: 2));
 
       Navigator.of(context).pushReplacement(
@@ -75,7 +70,6 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
           ),
         ),
       );
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -101,8 +95,13 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
       final bytes = await File(photo.path).readAsBytes();
       final base64Image = base64Encode(bytes);
 
+      if (base64Image.isEmpty) {
+        throw Exception("ไม่สามารถเข้ารหัสรูปภาพได้");
+      }
+
+      // 🔹 ตรวจสอบให้แน่ใจว่า fieldName เป็น String ที่ Firestore รองรับ
       await db.collection("Products").doc(widget.productId).update({
-        fieldName: base64Image,
+        fieldName: base64Image.toString(),
         "status": newStatus,
       });
 
@@ -111,12 +110,14 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
           const SnackBar(content: Text("📸 ถ่ายรูปและอัปเดตสถานะเรียบร้อย!")),
         );
       }
+    } on FirebaseException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Firebase Error: ${e.message}")),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("เกิดข้อผิดพลาด: ${e.toString()}")),
+      );
     }
   }
 
@@ -138,10 +139,12 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
         }
 
         Map<String, double>? receiverLocation;
-        if (data['receiverLocation'] != null) {
+        if (data['receiverLocation'] != null &&
+            data['receiverLocation']['lat'] != null &&
+            data['receiverLocation']['lng'] != null) {
           receiverLocation = {
-            'lat': data['receiverLocation']['lat'],
-            'lng': data['receiverLocation']['lng'],
+            'lat': (data['receiverLocation']['lat']).toDouble(),
+            'lng': (data['receiverLocation']['lng']).toDouble(),
           };
         }
 
@@ -166,7 +169,6 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // รูปสินค้า
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: data['productImage'] != null &&
@@ -227,7 +229,6 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // แผนที่ผู้รับ
                     if (receiverLocation != null)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,10 +246,7 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
                             height: 250,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.orange,
-                                width: 2,
-                              ),
+                              border: Border.all(color: Colors.orange, width: 2),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
@@ -264,8 +262,7 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
                                   TileLayer(
                                     urlTemplate:
                                         'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=eeb2695f683043e1a2cb2968a6a51064',
-                                    userAgentPackageName:
-                                        'com.example.delivery_app',
+                                    userAgentPackageName: 'com.example.delivery_app',
                                   ),
                                   MarkerLayer(
                                     markers: [
@@ -321,7 +318,6 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
                       ),
                     const SizedBox(height: 20),
 
-                    // ถ่ายรูปตอนส่งสินค้า
                     ElevatedButton.icon(
                       onPressed: hasPickupPhoto
                           ? () => takePhotoAndUpdateStatus(
@@ -331,9 +327,7 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
                           : null,
                       icon: const Icon(Icons.local_shipping),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: hasPickupPhoto
-                            ? Colors.orange
-                            : Colors.orange,
+                        backgroundColor: Colors.orange,
                         minimumSize: const Size(double.infinity, 50),
                       ),
                       label: const Text(
@@ -354,8 +348,7 @@ class _RiderCurrentJobPageState extends State<RiderCurrentJobPage> {
 
                     const SizedBox(height: 30),
 
-                    // ปุ่มส่งของสำเร็จ
-                    if (hasDeliveredPhoto)
+                    if (hasPickupPhoto)
                       ElevatedButton.icon(
                         onPressed: completeDelivery,
                         icon: const Icon(Icons.check_circle_outline),

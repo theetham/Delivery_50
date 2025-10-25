@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -187,7 +186,7 @@ class _AddProductPageState extends State<AddProductPage> {
               decoration: const InputDecoration(
                 hintText: "กรอกหมายเลขโทรศัพท์",
                 filled: true,
-              ),  
+              ),
               onChanged: filterUsers,
             ),
 
@@ -255,6 +254,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 ),
               ),
 
+            // ✅ แก้ Dropdown ไม่ให้ล้นหน้าจอ
             if (selectedUser != null &&
                 (selectedUser!['location'] != null ||
                     selectedUser!['location2'] != null))
@@ -265,54 +265,69 @@ class _AddProductPageState extends State<AddProductPage> {
                       style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 5),
 
-                  DropdownButtonFormField<String>(
-                    value: selectedLocation == null
-                        ? null
-                        : (mapEquals(
-                                selectedLocation!,
-                                {
-                                  'lat': selectedUser!['location']?['lat'],
-                                  'lng': selectedUser!['location']?['lng']
-                                })
-                            ? 'main'
-                            : 'alt'),
-                    items: [
-                      if (selectedUser!['location'] != null)
-                        DropdownMenuItem(
-                          value: 'main',
-                          child: Text(
-                            "ตำแหน่งหลัก (${selectedUser!['location']['lat']}, ${selectedUser!['location']['lng']})",
-                          ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      String formatLatLng(Map<String, dynamic> loc) {
+                        final lat = (loc['lat'] as double).toStringAsFixed(4);
+                        final lng = (loc['lng'] as double).toStringAsFixed(4);
+                        return "($lat, $lng)";
+                      }
+
+                      return DropdownButtonFormField<String>(
+                        isExpanded: true, // ✅ ป้องกันข้อความล้น
+                        value: selectedLocation == null
+                            ? null
+                            : (mapEquals(
+                                    selectedLocation!,
+                                    {
+                                      'lat': selectedUser!['location']?['lat'],
+                                      'lng': selectedUser!['location']?['lng']
+                                    })
+                                ? 'main'
+                                : 'alt'),
+                        items: [
+                          if (selectedUser!['location'] != null)
+                            DropdownMenuItem(
+                              value: 'main',
+                              child: Text(
+                                "ตำแหน่งหลัก ${formatLatLng(selectedUser!['location'])}",
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          if (selectedUser!['location2'] != null)
+                            DropdownMenuItem(
+                              value: 'alt',
+                              child: Text(
+                                "ตำแหน่งสำรอง ${formatLatLng(selectedUser!['location2'])}",
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == 'main') {
+                              selectedLocation = {
+                                'lat': selectedUser!['location']['lat'],
+                                'lng': selectedUser!['location']['lng'],
+                              };
+                            } else if (value == 'alt') {
+                              selectedLocation = {
+                                'lat': selectedUser!['location2']['lat'],
+                                'lng': selectedUser!['location2']['lng'],
+                              };
+                            } else {
+                              selectedLocation = null;
+                            }
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          filled: true,
+                          hintText: "เลือกตำแหน่งผู้รับ",
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                      if (selectedUser!['location2'] != null)
-                        DropdownMenuItem(
-                          value: 'alt',
-                          child: Text(
-                            "ตำแหน่งสำรอง (${selectedUser!['location2']['lat']}, ${selectedUser!['location2']['lng']})",
-                          ),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        if (value == 'main') {
-                          selectedLocation = {
-                            'lat': selectedUser!['location']['lat'],
-                            'lng': selectedUser!['location']['lng'],
-                          };
-                        } else if (value == 'alt') {
-                          selectedLocation = {
-                            'lat': selectedUser!['location2']['lat'],
-                            'lng': selectedUser!['location2']['lng'],
-                          };
-                        } else {
-                          selectedLocation = null;
-                        }
-                      });
+                      );
                     },
-                    decoration: const InputDecoration(
-                      filled: true,
-                      hintText: "เลือกตำแหน่งผู้รับ",
-                    ),
                   ),
 
                   const SizedBox(height: 10),
